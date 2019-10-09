@@ -1,5 +1,7 @@
 package http.client;
 
+import domain.HttpRequest;
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -19,19 +21,62 @@ public class WebClient {
         }
 
         printWriter.println("GET /index.html HTTP/1.1");
-        printWriter.println("Content-Length: "+params.length());
+        printWriter.println("Content-Length: " + params.length());
         printWriter.println("Content-Type: application/x-www-form-urlencodedrn");
         printWriter.println("");
         printWriter.println(params);
         printWriter.flush();
     }
 
-    public static void sendPostRequest(PrintWriter printWriter){
+    public static void sendHttpHeadRequest(PrintWriter printWriter) {
+        String params = "";
+        try {
+            params = URLEncoder.encode("param1", "UTF-8")
+                    + "=" + URLEncoder.encode("value1", "UTF-8");
+            params += "&" + URLEncoder.encode("param2", "UTF-8")
+                    + "=" + URLEncoder.encode("value2", "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        printWriter.println("HEAD /index.html HTTP/1.1");
+        printWriter.println("Content-Length: " + params.length());
+        printWriter.println("Content-Type: application/x-www-form-urlencodedrn");
+        printWriter.println("");
+        printWriter.println(params);
+        printWriter.flush();
+    }
+
+    public static void sendHttpPostRequest(PrintWriter printWriter) {
         String params = "{\n" +
                 "  \"this\" : \"that\"\n" +
                 "}";
         printWriter.println("POST /info/info.json HTTP/1.1");
-        printWriter.println("Content-Length: "+params.length());
+        printWriter.println("Content-Length: " + params.length());
+        printWriter.println("Content-Type: json");
+        printWriter.println("");
+        printWriter.println(params);
+        printWriter.flush();
+    }
+
+    public static void sendHttpPutRequest(PrintWriter printWriter) {
+        String params = "{\n" +
+                "  \"this\" : \"that\"\n" +
+                "}";
+        printWriter.println("PUT /info/info.json HTTP/1.1");
+        printWriter.println("Content-Length: " + params.length());
+        printWriter.println("Content-Type: json");
+        printWriter.println("");
+        printWriter.println(params);
+        printWriter.flush();
+    }
+
+    public static void sendHttpDeleteRequest(PrintWriter printWriter) {
+        String params = "{\n" +
+                "  \"this\" : \"that\"\n" +
+                "}";
+        printWriter.println("DELETE /info/info.json HTTP/1.1");
+        printWriter.println("Content-Length: " + params.length());
         printWriter.println("Content-Type: json");
         printWriter.println("");
         printWriter.println(params);
@@ -54,8 +99,9 @@ public class WebClient {
             addr = sock.getInetAddress();
             System.out.println("Connected to " + addr);
             PrintWriter out = new PrintWriter(sock.getOutputStream());
-            sendHttpGetRequest(out);
-            //sendPostRequest(out);
+            //sendHttpGetRequest(out);
+            //sendHttpPostRequest(out);
+            sendHttpHeadRequest(out);
             BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             String str = in.readLine();
             str = ".";

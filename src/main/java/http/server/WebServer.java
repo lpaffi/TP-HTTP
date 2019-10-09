@@ -25,6 +25,15 @@ public class WebServer {
 
     private static String path;
 
+    private HttpResponse genericHttpResponse() {
+        HttpResponse httpResponse = new HttpResponse();
+        httpResponse.setHttpProtocolVersion("HTTP/1.0");
+        httpResponse.setContentType("Content-Type: text/html");
+        httpResponse.setServerName("Server: Bot");
+
+        return httpResponse;
+    }
+
     public void sendHttpGetResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
         printWriter.println("");
 
@@ -35,13 +44,10 @@ public class WebServer {
         }
         url = path + url;
 
-        HttpResponse httpResponse = new HttpResponse();
-        httpResponse.setHttpProtocolVersion("HTTP/1.0");
-        httpResponse.setContentType("Content-Type: text/html");
-        httpResponse.setServerName("Server: Bot");
+        HttpResponse httpResponse = genericHttpResponse();
 
         File file = new File(url);
-        String content = "";
+        StringBuilder content = new StringBuilder();
         if (!file.isFile()) {
             httpResponse.setHttpStatus(Status.NOT_FOUND);
             httpResponse.setContent("<html>404 not found</html>");
@@ -51,9 +57,79 @@ public class WebServer {
                 BufferedReader bufferedReader = new BufferedReader(new FileReader(url));
                 String line = bufferedReader.readLine();
                 while (line != null) {
-                    content += line;
+                    content.append(line);
                     line = bufferedReader.readLine();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            httpResponse.setContent(content.toString());
+        }
+
+        // Send the HTML page
+        printWriter.println(httpResponse.toString());
+        printWriter.flush();
+        socket.close();
+        System.out.println("Response sent: " + httpResponse.toString());
+        printWriter.close();
+    }
+
+    public void sendHttpHeadResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
+        printWriter.println("");
+        //Load ressource
+        String url = httpRequest.getUrl();
+        if (url == null) {
+            url = "/index.html";
+        }
+        url = path + url;
+
+        HttpResponse httpResponse = genericHttpResponse();
+
+        File file = new File(url);
+        StringBuilder content = new StringBuilder();
+        if (!file.isFile()) {
+            httpResponse.setHttpStatus(Status.NOT_FOUND);
+            httpResponse.setContent("<html>404 not found</html>");
+        } else {
+            httpResponse.setHttpStatus(Status.OK);
+            httpResponse.setContent(httpRequest.getHeaderMap().toString());
+            httpResponse.setContent(content.toString());
+        }
+
+        // Send the HTML page
+        printWriter.println(httpResponse.toString());
+        printWriter.flush();
+        socket.close();
+        System.out.println("Response sent: " + httpResponse.toString());
+        printWriter.close();
+    }
+
+    public void sendHttpPostResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
+        //Load ressource
+        String url = httpRequest.getUrl();
+        if (url == null) {
+            url = "/index.html";
+        }
+        url = path + url;
+
+        HttpResponse httpResponse = genericHttpResponse();
+
+        File file = new File(url);
+        String content = httpRequest.getContent();
+        if (!file.isFile()) {
+            try {
+                file.createNewFile();
+                httpResponse.setHttpStatus(Status.CREATED);
+            } catch (IOException e) {
+                httpResponse.setHttpStatus(Status.BAD_REQUEST);
+                httpResponse.setContent("<html>400: POST request failed</html>");
+                e.printStackTrace();
+            }
+        } else {
+            httpResponse.setHttpStatus(Status.OK);
+            try {
+                FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+                fileOutputStream.write(httpRequest.getContent().getBytes());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -68,7 +144,7 @@ public class WebServer {
         printWriter.close();
     }
 
-    public void sendHttpPostResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter){
+    public void sendHttpPutResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
         //Load ressource
         String url = httpRequest.getUrl();
         if (url == null) {
@@ -76,20 +152,24 @@ public class WebServer {
         }
         url = path + url;
 
-        HttpResponse httpResponse = new HttpResponse();
-        httpResponse.setHttpProtocolVersion("HTTP/1.0");
-        httpResponse.setContentType("Content-Type: text/html");
-        httpResponse.setServerName("Server: Bot");
+        HttpResponse httpResponse = genericHttpResponse();
 
         File file = new File(url);
         String content = httpRequest.getContent();
+
         if (!file.isFile()) {
-            httpResponse.setHttpStatus(Status.NOT_FOUND);
-            httpResponse.setContent("<html>404 not found</html>");
+            try {
+                file.createNewFile();
+                httpResponse.setHttpStatus(Status.CREATED);
+            } catch (IOException e) {
+                httpResponse.setHttpStatus(Status.BAD_REQUEST);
+                httpResponse.setContent("<html>400: PUT request failed</html>");
+                e.printStackTrace();
+            }
         } else {
             httpResponse.setHttpStatus(Status.OK);
             try {
-                FileOutputStream fileOutputStream = new FileOutputStream(file,false);
+                FileOutputStream fileOutputStream = new FileOutputStream(file, false);
                 fileOutputStream.write(httpRequest.getContent().getBytes());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -100,9 +180,52 @@ public class WebServer {
         // Send the HTML page
         printWriter.println(httpResponse.toString());
         printWriter.flush();
+        socket.close();
         System.out.println("Response sent: " + httpResponse.toString());
         printWriter.close();
     }
+
+    public void sendHttpDeleteResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
+        //Load ressource
+        String url = httpRequest.getUrl();
+        if (url == null) {
+            url = "/index.html";
+        }
+        url = path + url;
+
+        HttpResponse httpResponse = genericHttpResponse();
+
+        File file = new File(url);
+        String content = "";
+
+        if (!file.isFile()) {
+                httpResponse.setHttpStatus(Status.BAD_REQUEST);
+                httpResponse.setContent("<html>400: DELETE request failed</html>");
+        } else {
+            httpResponse.setHttpStatus(Status.NO_CONTENT);
+            try {
+                if(file.delete()) {
+                    httpResponse.setHttpStatus(Status.OK);
+                    content = "<html>\n" +
+                            "  <body>\n" +
+                            "    <h1>File deleted.</h1> \n" +
+                            "  </body>\n" +
+                            "</html>";
+                };
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            httpResponse.setContent(content);
+        }
+
+        // Send the HTML page
+        printWriter.println(httpResponse.toString());
+        printWriter.flush();
+        socket.close();
+        System.out.println("Response sent: " + httpResponse.toString());
+        printWriter.close();
+    }
+
 
     /**
      * WebServer constructor.
@@ -151,7 +274,7 @@ public class WebServer {
                 }
                 int contentLength = 0;
 
-                if(httpRequest.getHeaderMap().containsKey("Content-Length")) {
+                if (httpRequest.getHeaderMap().containsKey("Content-Length")) {
                     contentLength = Integer.parseInt(httpRequest.getHeaderMap().get("Content-Length"));
                 }
 
@@ -162,10 +285,22 @@ public class WebServer {
                     contentLength = contentLength - content.getBytes().length;
                 }
                 httpRequest.setContent(content);
-                if ("GET".equals(httpRequest.getHttpMethod())){
-                    sendHttpGetResponse(httpRequest, remote, out);
-                } else if ("POST".equals(httpRequest.getHttpMethod())){
-                    sendHttpPostResponse(httpRequest, remote, out);
+                String httpMethod = httpRequest.getHttpMethod();
+                switch (httpMethod) {
+                    case "GET":
+                        sendHttpGetResponse(httpRequest, remote, out);
+                        break;
+                    case "POST":
+                        sendHttpPostResponse(httpRequest, remote, out);
+                        break;
+                    case "PUT":
+                        sendHttpPutResponse(httpRequest, remote, out);
+                        break;
+                    case "HEAD":
+                        sendHttpHeadResponse(httpRequest, remote, out);
+                        break;
+                    case "DELETE":
+                        sendHttpDeleteResponse(httpRequest, remote, out);
                 }
                 System.out.println(httpRequest.toString());
 
