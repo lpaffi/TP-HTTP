@@ -26,6 +26,18 @@ public class WebClient {
         printWriter.flush();
     }
 
+    public static void sendPostRequest(PrintWriter printWriter){
+        String params = "{\n" +
+                "  \"this\" : \"that\"\n" +
+                "}";
+        printWriter.println("POST /info/info.json HTTP/1.1");
+        printWriter.println("Content-Length: "+params.length());
+        printWriter.println("Content-Type: json");
+        printWriter.println("");
+        printWriter.println(params);
+        printWriter.flush();
+    }
+
     public static void main(String[] args) {
 
         if (args.length != 2) {
@@ -43,6 +55,7 @@ public class WebClient {
             System.out.println("Connected to " + addr);
             PrintWriter out = new PrintWriter(sock.getOutputStream());
             sendHttpGetRequest(out);
+            //sendPostRequest(out);
             BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             String str = in.readLine();
             str = ".";

@@ -23,13 +23,11 @@ import java.net.Socket;
  */
 public class WebServer {
 
-    private static String path = "/Users/luccavidal/Desktop/TP-HTTP-Code/src/main/resources";
+    private static String path;
 
-    public void sendHttpResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) {
-        // Send the response
-        // Send the headers
-        // this blank line signals the end of the headers
+    public void sendHttpGetResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
         printWriter.println("");
+
         //Load ressource
         String url = httpRequest.getUrl();
         if (url == null) {
@@ -41,6 +39,7 @@ public class WebServer {
         httpResponse.setHttpProtocolVersion("HTTP/1.0");
         httpResponse.setContentType("Content-Type: text/html");
         httpResponse.setServerName("Server: Bot");
+
         File file = new File(url);
         String content = "";
         if (!file.isFile()) {
@@ -55,6 +54,43 @@ public class WebServer {
                     content += line;
                     line = bufferedReader.readLine();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            httpResponse.setContent(content);
+        }
+
+        // Send the HTML page
+        printWriter.println(httpResponse.toString());
+        printWriter.flush();
+        socket.close();
+        System.out.println("Response sent: " + httpResponse.toString());
+        printWriter.close();
+    }
+
+    public void sendHttpPostResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter){
+        //Load ressource
+        String url = httpRequest.getUrl();
+        if (url == null) {
+            url = "/index.html";
+        }
+        url = path + url;
+
+        HttpResponse httpResponse = new HttpResponse();
+        httpResponse.setHttpProtocolVersion("HTTP/1.0");
+        httpResponse.setContentType("Content-Type: text/html");
+        httpResponse.setServerName("Server: Bot");
+
+        File file = new File(url);
+        String content = httpRequest.getContent();
+        if (!file.isFile()) {
+            httpResponse.setHttpStatus(Status.NOT_FOUND);
+            httpResponse.setContent("<html>404 not found</html>");
+        } else {
+            httpResponse.setHttpStatus(Status.OK);
+            try {
+                FileOutputStream fileOutputStream = new FileOutputStream(file,false);
+                fileOutputStream.write(httpRequest.getContent().getBytes());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -126,8 +162,13 @@ public class WebServer {
                     contentLength = contentLength - content.getBytes().length;
                 }
                 httpRequest.setContent(content);
+                if ("GET".equals(httpRequest.getHttpMethod())){
+                    sendHttpGetResponse(httpRequest, remote, out);
+                } else if ("POST".equals(httpRequest.getHttpMethod())){
+                    sendHttpPostResponse(httpRequest, remote, out);
+                }
                 System.out.println(httpRequest.toString());
-                this.sendHttpResponse(httpRequest, remote, out);
+
                 in.close();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -142,6 +183,7 @@ public class WebServer {
      * @param args Command line parameters are not used.
      */
     public static void main(String args[]) {
+        path = args[0];
         WebServer ws = new WebServer();
         ws.start();
     }
