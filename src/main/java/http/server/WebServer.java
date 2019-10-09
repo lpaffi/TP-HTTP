@@ -44,7 +44,8 @@ public class WebServer {
         File file = new File(url);
         String content = "";
         if (!file.isFile()) {
-            httpResponse.setHttpStatus(Status.BAD_REQUEST);
+            httpResponse.setHttpStatus(Status.NOT_FOUND);
+            httpResponse.setContent("<html>404 not found</html>");
         } else {
             httpResponse.setHttpStatus(Status.OK);
             try {
