@@ -3,18 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <title>Liste d'Élèves</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
 <p>Cliquer pour voir la liste des élèves</p>
-<a href="liste-etudiants.html"> Liste d'élèves </a>
-<form>
-    <label>Nom</label><input type="text" name="firstname">
-    <label>Prémon</label><input type="text" name="lastname">
-    <label>Département</label><input type="text" name="departement">
-    <input type="submit">
-</form>
+<button id="allStudents">Liste d'étudiants</button>
 
+<div id="liste_etudiants">
+</div>
+
+<br>
+<p>Pour chercher un étudiant spécifique, entrez son prenom et nom: </p>
+    <p> <label>Prenom </label><input type="text" id="firstname"> </p>
+    <p> <label>Nom </label><input type="text" id="lastname"> </p>
+
+<button id = "get-student-button" value="Submit">Rechercher</button>
+<br><br>
+<div id ="student">
+
+</div>
 <script>
+    $("#allStudents").click(function(e) {
+        $("#liste_etudiants").html("");
+        $.ajax({
+            type: "GET",
+            url: "/liste-etudiants.html",
+            success: function(result) {
+                $("#liste_etudiants").append(result);
+            },
+            error: function(result) {
+                alert('error');
+            }
+        })
+    }),
+
+    $("#get-student-button").click(function (e) {
+        $("#student").html("");
+        var firstName = document.getElementById("firstname").value;
+        var lastName = document.getElementById("lastname").value;
+        firstName = firstName.toLowerCase();
+        lastName = lastName.toLowerCase();
+        $.ajax({
+            type: "GET",
+            url: "/students/"+firstName+"-"+lastName+".html",
+            success: function(result) {
+                $("#student").append(result);
+                console.log(result)
+            },
+            error: function(result) {
+                $("#student").append("Cet étudiant(e) n'existe pas");
+            }
+        })
+    })
+
 </script>
 
 
