@@ -100,8 +100,8 @@ public class WebClient {
             System.out.println("Connected to " + addr);
             PrintWriter out = new PrintWriter(sock.getOutputStream());
             //sendHttpGetRequest(out);
-            //sendHttpPostRequest(out);
-            sendHttpHeadRequest(out);
+            sendHttpPostRequest(out);
+            //sendHttpHeadRequest(out);
             BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             String str = in.readLine();
             str = ".";

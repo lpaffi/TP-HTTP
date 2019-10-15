@@ -133,7 +133,6 @@ public class WebServer {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            httpResponse.setContent(content);
         }
 
         // Send the HTML page
