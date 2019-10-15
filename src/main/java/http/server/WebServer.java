@@ -67,7 +67,6 @@ public class WebServer {
         socket.getOutputStream().write(httpResponse.toString().getBytes());
         socket.getOutputStream().write(b);
         socket.getOutputStream().flush();
-        socket.close();
         System.out.println("Response sent: " + httpResponse.toString());
     }
 
@@ -96,9 +95,7 @@ public class WebServer {
         // Send the HTML page
         printWriter.println(httpResponse.toString());
         printWriter.flush();
-        socket.close();
         System.out.println("Response sent: " + httpResponse.toString());
-        printWriter.close();
     }
 
     public void sendHttpPostResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
@@ -135,9 +132,7 @@ public class WebServer {
         // Send the HTML page
         printWriter.println(httpResponse.toString());
         printWriter.flush();
-        socket.close();
         System.out.println("Response sent: " + httpResponse.toString());
-        printWriter.close();
     }
 
     public void sendHttpPutResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
@@ -176,9 +171,7 @@ public class WebServer {
         // Send the HTML page
         printWriter.println(httpResponse.toString());
         printWriter.flush();
-        socket.close();
         System.out.println("Response sent: " + httpResponse.toString());
-        printWriter.close();
     }
 
     public void sendHttpDeleteResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
@@ -217,9 +210,8 @@ public class WebServer {
         // Send the HTML page
         printWriter.println(httpResponse.toString());
         printWriter.flush();
-        socket.close();
         System.out.println("Response sent: " + httpResponse.toString());
-        printWriter.close();
+
     }
 
     public String getContentTypeFromFile(String url){
@@ -319,7 +311,6 @@ public class WebServer {
                 }
                 System.out.println(httpRequest.toString());
 
-                in.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("Error: "+e);
