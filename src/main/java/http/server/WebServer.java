@@ -67,6 +67,7 @@ public class WebServer {
         socket.getOutputStream().write(httpResponse.toString().getBytes());
         socket.getOutputStream().write(b);
         socket.getOutputStream().flush();
+        socket.getOutputStream().close();
         System.out.println("Response sent: " + httpResponse.toString());
     }
 
@@ -114,6 +115,8 @@ public class WebServer {
             try {
                 file.createNewFile();
                 httpResponse.setHttpStatus(Status.CREATED);
+                FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+                fileOutputStream.write(httpRequest.getContent().getBytes());
             } catch (IOException e) {
                 httpResponse.setHttpStatus(Status.BAD_REQUEST);
                 httpResponse.setContent("<html>400: POST request failed</html>");
@@ -289,7 +292,7 @@ public class WebServer {
                 while (contentLength > 0) {
                     str = in.readLine();
                     content = content + str;
-                    contentLength = contentLength - content.getBytes().length;
+                    contentLength = contentLength - (str.length()+1);
                 }
                 httpRequest.setContent(content);
                 String httpMethod = httpRequest.getHttpMethod();

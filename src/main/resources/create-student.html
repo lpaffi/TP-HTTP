@@ -31,14 +31,23 @@
             "<department>" + department + "</department>\n" +
             "</Student>";
 
-        var data = "hello";
-        $.post("/students/" + firstName + "-" + lastName + ".html",
-            {
-                data: data
+        //var data = "hello";
+        $.ajax({
+            type: 'POST',
+            url: '/students/'+firstName+"-"+lastName+".html",
+            data: data,
+            headers: {
+                "Content-Type":"text/xml",
+                "Content-Length": (new TextEncoder().encode(data)).length
             },
-            function (result){
-                console.log(result);
-            });
-    })
+            timeout: 1000,
+            success: function(data){
+                console.log("success");
+            },
+            error: function(){
+                console.log("error");
+            }
+        });
+    });
 </script>
 </html>
