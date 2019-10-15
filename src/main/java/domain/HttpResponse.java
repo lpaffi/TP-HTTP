@@ -1,5 +1,7 @@
 package domain;
 
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+
 import javax.ws.rs.core.Response.Status;
 
 public class HttpResponse {
@@ -62,8 +64,7 @@ public class HttpResponse {
     @Override
     public String toString() {
         return httpProtocolVersion + " " + httpStatus.getStatusCode() + " " + httpStatus + "\n"
-                + contentType + " \n" + serverName + "\n"
-                + "\n"
-                + content;
+            + contentType + " \n" + serverName + "\n"
+            + "\n";
     }
 }

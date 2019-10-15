@@ -2,6 +2,7 @@
 
 package http.server;
 
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import domain.HttpRequest;
 import domain.HttpResponse;
 
@@ -10,6 +11,7 @@ import javax.ws.rs.core.Response.Status;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 /**
  * Example program from Chapter 1 Programming Spiders, Bots and Aggregators in
@@ -47,31 +49,26 @@ public class WebServer {
         HttpResponse httpResponse = genericHttpResponse();
 
         File file = new File(url);
-        StringBuilder content = new StringBuilder();
+        byte[] b = null;
         if (!file.isFile()) {
             httpResponse.setHttpStatus(Status.NOT_FOUND);
             httpResponse.setContent("<html>404 not found</html>");
         } else {
             httpResponse.setHttpStatus(Status.OK);
-            try {
-                BufferedReader bufferedReader = new BufferedReader(new FileReader(url));
-                String line = bufferedReader.readLine();
-                while (line != null) {
-                    content.append(line);
-                    line = bufferedReader.readLine();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            httpResponse.setContent(content.toString());
+
+            RandomAccessFile f = new RandomAccessFile(url, "r");
+            b = new byte[(int)f.length()];
+            f.readFully(b);
+
+            httpResponse.setContentType(getContentTypeFromFile(url));
         }
 
         // Send the HTML page
-        printWriter.println(httpResponse.toString());
-        printWriter.flush();
+        socket.getOutputStream().write(httpResponse.toString().getBytes());
+        socket.getOutputStream().write(b);
+        socket.getOutputStream().flush();
         socket.close();
         System.out.println("Response sent: " + httpResponse.toString());
-        printWriter.close();
     }
 
     public void sendHttpHeadResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
@@ -225,6 +222,24 @@ public class WebServer {
         printWriter.close();
     }
 
+    public String getContentTypeFromFile(String url){
+        // lecture de l'extension pour mettre le content-type correct
+        String[] listeExtensions = url.split("\\.");
+        String extension = listeExtensions[listeExtensions.length-1];
+
+        switch(extension.toLowerCase()){
+            case "png":
+                return "Content-Type: image/png";
+            case "jpg":
+                return "Content-Type: image/jpg";
+            case "mp4":
+                return "Content-Type: video/mp4";
+            case "mp3":
+                return "Content-Type: audio/mpeg";
+            default:
+                return "Content-Type: text/html";
+        }
+    }
 
     /**
      * WebServer constructor.
@@ -259,6 +274,7 @@ public class WebServer {
                 String str = ".";
                 HttpRequest httpRequest = new HttpRequest();
                 str = in.readLine();
+                System.out.println("FirstLine "+str);
                 String[] firstLine = str.split(" ");
                 httpRequest.setHttpMethod(firstLine[0]);
                 httpRequest.setUrl(firstLine[1]);
@@ -306,12 +322,14 @@ public class WebServer {
                 in.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("Error: ");
+                System.out.println("Error: "+e);
             }
         }
     }
 
     /**
+
+
      * Start the application.
      *
      * @param args Command line parameters are not used.

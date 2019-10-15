@@ -24,20 +24,20 @@
         firstName = firstName.toLowerCase();
         lastName = lastName.toLowerCase();
         department = department.toUpperCase();
-/*
+
         var data = "<Student>\n" +
             "<firstName>" + firstName + "</firstName>\n" +
             "<lastName>" + lastName + "</lastName>\n" +
             "<department>" + department + "</department>\n" +
             "</Student>";
-        */
+
         var data = "hello";
         $.post("/students/" + firstName + "-" + lastName + ".html",
             {
-                firs
+                data: data
             },
             function (result){
-            console.log(result);
+                console.log(result);
             });
     })
 </script>
