@@ -2,7 +2,6 @@
 
 package http.server;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import domain.HttpRequest;
 import domain.HttpResponse;
 
@@ -11,7 +10,6 @@ import javax.ws.rs.core.Response.Status;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 
 /**
  * Example program from Chapter 1 Programming Spiders, Bots and Aggregators in
@@ -53,6 +51,8 @@ public class WebServer {
         if (!file.isFile()) {
             httpResponse.setHttpStatus(Status.NOT_FOUND);
             httpResponse.setContent("<html>404 not found</html>");
+
+            socket.getOutputStream().write(httpResponse.toString().getBytes());
         } else {
             httpResponse.setHttpStatus(Status.OK);
 
@@ -61,11 +61,13 @@ public class WebServer {
             f.readFully(b);
 
             httpResponse.setContentType(getContentTypeFromFile(url));
+
+            socket.getOutputStream().write(httpResponse.toString().getBytes());
+            socket.getOutputStream().write(b);
         }
 
         // Send the HTML page
-        socket.getOutputStream().write(httpResponse.toString().getBytes());
-        socket.getOutputStream().write(b);
+
         socket.getOutputStream().flush();
         socket.getOutputStream().close();
         System.out.println("Response sent: " + httpResponse.toString());
@@ -138,6 +140,8 @@ public class WebServer {
                 FileOutputStream fileOutputStream = new FileOutputStream(file, true);
                 fileOutputStream.write(httpRequest.getContent().getBytes());
             } catch (Exception e) {
+                httpResponse.setHttpStatus(Status.INTERNAL_SERVER_ERROR);
+                httpResponse.setContent("<html>500: internal server error</html>");
                 e.printStackTrace();
             }
         }
@@ -145,10 +149,11 @@ public class WebServer {
         // Send the HTML page
         printWriter.println(httpResponse.toString());
         printWriter.flush();
+        printWriter.close();
         System.out.println("Response sent: " + httpResponse.toString());
     }
 
-    public void sendHttpPutResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
+    public void sendHttpPutResponse(HttpRequest httpRequest, PrintWriter printWriter) {
         //Load ressource
         String url = httpRequest.getUrl();
         if (url == null) {
@@ -176,6 +181,8 @@ public class WebServer {
                 FileOutputStream fileOutputStream = new FileOutputStream(file, false);
                 fileOutputStream.write(httpRequest.getContent().getBytes());
             } catch (Exception e) {
+                httpResponse.setHttpStatus(Status.INTERNAL_SERVER_ERROR);
+                httpResponse.setContent("<html>500: internal server error</html>");
                 e.printStackTrace();
             }
             httpResponse.setContent(content);
@@ -187,7 +194,7 @@ public class WebServer {
         System.out.println("Response sent: " + httpResponse.toString());
     }
 
-    public void sendHttpDeleteResponse(HttpRequest httpRequest, Socket socket, PrintWriter printWriter) throws IOException {
+    public void sendHttpDeleteResponse(HttpRequest httpRequest, PrintWriter printWriter) {
         //Load ressource
         String url = httpRequest.getUrl();
         if (url == null) {
@@ -201,8 +208,8 @@ public class WebServer {
         String content = "";
 
         if (!file.isFile()) {
-                httpResponse.setHttpStatus(Status.BAD_REQUEST);
-                httpResponse.setContent("<html>400: DELETE request failed</html>");
+            httpResponse.setHttpStatus(Status.BAD_REQUEST);
+            httpResponse.setContent("<html>400: DELETE request failed</html>");
         } else {
             httpResponse.setHttpStatus(Status.NO_CONTENT);
             try {
@@ -213,8 +220,10 @@ public class WebServer {
                             "    <h1>File deleted.</h1> \n" +
                             "  </body>\n" +
                             "</html>";
-                };
+                }
             } catch (Exception e) {
+                httpResponse.setHttpStatus(Status.INTERNAL_SERVER_ERROR);
+                httpResponse.setContent("<html>500: internal server error</html>");
                 e.printStackTrace();
             }
             httpResponse.setContent(content);
@@ -224,7 +233,7 @@ public class WebServer {
         printWriter.println(httpResponse.toString());
         printWriter.flush();
         System.out.println("Response sent: " + httpResponse.toString());
-
+        printWriter.close();
     }
 
     public String getContentTypeFromFile(String url){
@@ -279,11 +288,16 @@ public class WebServer {
                 String str = ".";
                 HttpRequest httpRequest = new HttpRequest();
                 str = in.readLine();
-                System.out.println("FirstLine "+str);
-                String[] firstLine = str.split(" ");
-                httpRequest.setHttpMethod(firstLine[0]);
-                httpRequest.setUrl(firstLine[1]);
-                httpRequest.setHttpProtocolVersion(firstLine[2]);
+                try {
+                    System.out.println("FirstLine "+str);
+                    String[] firstLine = str.split(" ");
+                    httpRequest.setHttpMethod(firstLine[0]);
+                    httpRequest.setUrl(firstLine[1]);
+                    httpRequest.setHttpProtocolVersion(firstLine[2]);
+                }
+                catch (Exception e){
+
+                }
 
                 str = in.readLine();
 
@@ -314,13 +328,13 @@ public class WebServer {
                         sendHttpPostResponse(httpRequest, remote, out);
                         break;
                     case "PUT":
-                        sendHttpPutResponse(httpRequest, remote, out);
+                        sendHttpPutResponse(httpRequest, out);
                         break;
                     case "HEAD":
                         sendHttpHeadResponse(httpRequest, remote, out);
                         break;
                     case "DELETE":
-                        sendHttpDeleteResponse(httpRequest, remote, out);
+                        sendHttpDeleteResponse(httpRequest, out);
                 }
                 System.out.println(httpRequest.toString());
 

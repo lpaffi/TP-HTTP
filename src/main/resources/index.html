@@ -30,6 +30,11 @@
 <p>
     <a href="applaudissements.mp3">Bruitage applaudissements</a>
 </p>
+<p>
+    <label>Prenom </label><input type="text" id="firstnameDelete"> <br>
+    <label>Nom </label><input type="text" id="lastnameDelete">
+    <button id="delete-student-file">Supprimer cet élève</button>
+</p>
 
 
 <script>
@@ -62,6 +67,24 @@
             },
             error: function(result) {
                 $("#student").append("Cet étudiant(e) n'existe pas");
+            }
+        })
+    })
+
+    $("#delete-student-file").click(function (e){
+        var firstName = document.getElementById("firstnameDelete").value;
+        var lastName = document.getElementById("lastnameDelete").value;
+        firstName = firstName.toLowerCase();
+        lastName = lastName.toLowerCase();
+        $.ajax({
+            type: "DELETE",
+            url: "/students/"+firstName+"-"+lastName+".html",
+            success: function(result) {
+                console.log(result);
+                alert("fichier etudiant supprimé");
+            },
+            error: function(result) {
+                alert("echec");
             }
         })
     })
