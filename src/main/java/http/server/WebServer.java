@@ -82,15 +82,25 @@ public class WebServer {
 
         HttpResponse httpResponse = genericHttpResponse();
 
-        File file = new File(url);
-        StringBuilder content = new StringBuilder();
-        if (!file.isFile()) {
-            httpResponse.setHttpStatus(Status.NOT_FOUND);
-            httpResponse.setContent("<html>404 not found</html>");
-        } else {
+        String[] listeExtensions = url.split("\\.");
+        String extension = listeExtensions[listeExtensions.length-1];
+        if ("sh".equals(extension.toLowerCase())){
+            ProcessBuilder pb = new ProcessBuilder("/bin/bash","-c", "echo Hello > "+path+"/myfile.txt");
+            pb.start();
+            Runtime.getRuntime().exec("sh script.sh");
             httpResponse.setHttpStatus(Status.OK);
-            httpResponse.setContent(httpRequest.getHeaderMap().toString());
-            httpResponse.setContent(content.toString());
+        }
+        else{
+            File file = new File(url);
+            StringBuilder content = new StringBuilder();
+            if (!file.isFile()) {
+                httpResponse.setHttpStatus(Status.NOT_FOUND);
+                httpResponse.setContent("<html>404 not found</html>");
+            } else {
+                httpResponse.setHttpStatus(Status.OK);
+                httpResponse.setContent(httpRequest.getHeaderMap().toString());
+                httpResponse.setContent(content.toString());
+            }
         }
 
         // Send the HTML page
